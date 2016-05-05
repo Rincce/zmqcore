@@ -39,9 +39,14 @@ class ZMQCore(object):
         # Create ZMQ publisher socket.
         self.pub_socket = context.socket(zmq.PUB)
         self.pub_socket.bind('tcp://*:5556')
+        # Create ZMQ subscriber socket.
+        self.sub_socket = context.socket(zmq.SUB)
+        self.sub_socket.bind('tcp://*:5557')
+        self.sub_socket.setsockopt(zmq.SUBSCRIBE, '')
         # Initiallize poller to deal with multiple sockets
         self.poller = zmq.Poller()
         self.poller.register(self.reg_service, zmq.POLLIN)
+        self.poller.register(self.sub_socket, zmq.POLLIN)
 
     def poll(self):
         """Poll for registered sockets."""
