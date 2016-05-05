@@ -50,12 +50,9 @@ class ZMQCore(object):
 
     def poll(self):
         """Poll for registered sockets."""
-        try:
-            socks = dict(self.poller.poll())
-        except KeyboardInterrupt:
-            pass
-        else:
-            if self.reg_service in socks:
+        socks = dict(self.poller.poll())
+        for sock in socks:
+            if sock == self.reg_service:
                 msg = self.reg_service.recv_multipart()
                 # Check if the topic is acturally published.
                 topic_list = rospy.get_published_topics()
@@ -65,9 +62,14 @@ class ZMQCore(object):
                 else:
                     self.reg_service.send(b'0')
                     data_class = load_class(msg[2], msg[1])
-                    sub = rospy.Subscriber(msg[0], data_class,
-                                           self.handle_subscription, msg[0])
+                    sub = rospy.Subscriber(msg[0],
+                                           data_class,
+                                           self.handle_subscription,
+                                           msg[0])
                     self.subs[msg[0]] = sub
+            if sock == self.sub_socket:
+                # publish to ROS
+                pass
 
     def handle_subscription(self, data, sub):
         """
