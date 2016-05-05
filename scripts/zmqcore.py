@@ -32,6 +32,7 @@ class ZMQCore(object):
     def __init__(self):
         """Initialize ZMQCore class."""
         self.subs = {}  # dict of registered subscribers.
+        self.pubs = {}  # dict of registered publishers.
         context = zmq.Context()
         # Create ZMQ registering service.
         self.reg_service = context.socket(zmq.REP)
@@ -68,8 +69,12 @@ class ZMQCore(object):
                                            msg[0])
                     self.subs[msg[0]] = sub
             if sock == self.sub_socket:
-                # publish to ROS
-                pass
+                msg = self.sub_socket.recv_multipart()
+                if msg[0] not in self.pubs:
+                    data_class = load_class(msg[3], msg[2])
+                    pub = rospy.Publisher(msg[0], data_class, queue_size=10)
+                    self.pubs[msg[0]] = pub
+                self.pubs[msg[0]].publish(msg[1])
 
     def handle_subscription(self, data, sub):
         """
