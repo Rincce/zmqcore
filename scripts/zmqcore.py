@@ -8,8 +8,9 @@ Created on May 5 6, 2016
 """
 
 import zmq
-import cPickle
+import json
 import rospy
+from rospy_message_converter import message_converter as mc
 
 
 def load_class(module, classname):
@@ -83,11 +84,9 @@ class ZMQCore(object):
         @param data: The data that is published under the subscribed topic.
         @param sub: I{(str)} The subscription name.
         """
-        self.pub_socket.send_multipart(
-                            [sub,
-                             cPickle.dumps(data,
-                                           cPickle.HIGHEST_PROTOCOL)]
-                                      )
+        d = mc.convert_ros_message_to_dictionary(data)
+        print d
+        self.pub_socket.send_multipart([sub, json.dumps(d)])
 
 
 def zmqcore_run():
